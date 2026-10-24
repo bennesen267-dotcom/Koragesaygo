@@ -23,14 +23,20 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Install Gradle
+        run: |
+          curl -fL https://services.gradle.org/distributions/gradle-8.4-bin.zip -o /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp
+
       - name: Build JAR
         run: |
           cd yataboes
-          chmod +x gradlew
-          ./gradlew build
+          /tmp/gradle-8.4/bin/gradle build --no-daemon
 
       - name: Upload JAR
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: Yataboes-JAR
           path: yataboes/build/libs/*.jar
+          if-no-files-found: error
