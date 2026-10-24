@@ -11,8 +11,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Download project
+        uses: actions/checkout@v4
 
       - name: Extract ZIP
         run: python3 -m zipfile -e yataboes.zip .
@@ -25,16 +27,17 @@ jobs:
 
       - name: Install Gradle
         run: |
-          curl -fL https://services.gradle.org/distributions/gradle-8.4-bin.zip -o /tmp/gradle.zip
+          curl -fL https://services.gradle.org/distributions/gradle-8.6-bin.zip -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /tmp
 
-      - name: Fix Loom
-        run: sed -i "s/1.4-SNAPSHOT/1.6.12/" yataboes/build.gradle
+      - name: Fix Fabric Loom
+        run: |
+          sed -i 's/1.4-SNAPSHOT/1.6.12/g' yataboes/build.gradle
 
       - name: Build JAR
         run: |
           cd yataboes
-          /tmp/gradle-8.4/bin/gradle build --no-daemon
+          /tmp/gradle-8.6/bin/gradle build --no-daemon
 
       - name: Upload JAR
         if: success()
