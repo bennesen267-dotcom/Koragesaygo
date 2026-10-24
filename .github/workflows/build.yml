@@ -11,10 +11,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Download project
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Extract ZIP
         run: python3 -m zipfile -e yataboes.zip .
@@ -27,12 +25,53 @@ jobs:
 
       - name: Install Gradle
         run: |
-          curl -fL https://services.gradle.org/distributions/gradle-8.6-bin.zip -o /tmp/gradle.zip
+          curl -fsSL https://services.gradle.org/distributions/gradle-8.6-bin.zip -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /tmp
 
-      - name: Fix Fabric Loom
+      - name: Fix Loom
+        run: sed -i 's/1.4-SNAPSHOT/1.6.12/g' yataboes/build.gradle
+
+      - name: Fix Minecraft GUI code
         run: |
-          sed -i 's/1.4-SNAPSHOT/1.6.12/g' yataboes/build.gradle
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("yataboes/src/main/java/com/yataboes/gui/ClickGUI.java")
+          s = p.read_text()
+
+          s = s.replace(
+              "import net.minecraft.client.gui.DrawableHelper;",
+              "import net.minecraft.client.gui.DrawContext;"
+          )
+          s = s.replace(
+              "import net.minecraft.client.util.math.MatrixStack;",
+              ""
+          )
+          s = s.replace("MatrixStack m", "DrawContext m")
+          s = s.replace(
+              "DrawableHelper.fill(m, x1, y1, x2, y2, color);",
+              "m.fill(x1, y1, x2, y2, color);"
+          )
+          s = s.replace(
+              "drawCenteredString(m, textRenderer,",
+              "m.drawCenteredTextWithShadow(textRenderer,"
+          )
+          s = s.replace(
+              "drawString(m, textRenderer,",
+              "m.drawText(textRenderer,"
+          )
+
+          s = re.sub(
+              r"m\.drawText\((.*?)\);",
+              lambda match: "m.drawText(" + match.group(1) + ", false);",
+              s,
+              flags=re.S
+          )
+
+          p.write_text(s)
+          print("GUI compatibility patch applied")
+          PY
 
       - name: Build JAR
         run: |
