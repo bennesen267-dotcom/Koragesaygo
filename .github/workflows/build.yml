@@ -1,0 +1,40 @@
+
+name: Build Yataboes
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'yataboes.zip'
+      - '.github/workflows/build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract ZIP
+        run: |
+          python3 - <<'PY'
+          import zipfile
+          with zipfile.ZipFile("yataboes.zip") as z:
+              z.extractall(".")
+          PY
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build JAR
+        run: |
+          chmod +x gradlew
+          ./gradlew build
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: Yataboes-JAR
+          path: '**/build/libs/*.jar'
