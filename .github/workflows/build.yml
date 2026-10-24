@@ -28,6 +28,9 @@ jobs:
           curl -fL https://services.gradle.org/distributions/gradle-8.4-bin.zip -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /tmp
 
+      - name: Fix Loom
+        run: sed -i "s/1.4-SNAPSHOT/1.6.12/" yataboes/build.gradle
+
       - name: Build JAR
         run: |
           cd yataboes
